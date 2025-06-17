@@ -17,15 +17,21 @@ def create_prompt(fixture):
     away  = fixture["teams"]["away"]["name"]
     score = f'{fixture["goals"]["home"]}-{fixture["goals"]["away"]}'
     events = fixture.get("events", [])
-    events_str = "; ".join(
-        f"{e['elapsed']}' {e['team']['name']} {e['player']['name']} {e['type']}"
-        for e in events
-    ) or "No major events recorded."
+    formatted = []
+    for e in events:
+        # Safely grab the elapsed minute
+        minute = e.get("time", {}).get("elapsed", "0")
+        team   = e.get("team", {}).get("name", "Unknown Team")
+        player = e.get("player", {}).get("name", "Unknown Player")
+        etype  = e.get("type", "event")
+        formatted.append(f"{minute}ʼ {team} {player} {etype}")
+    events_str = "; ".join(formatted) if formatted else "No major events recorded."
     return (
         f"Summarize the soccer match between {home} and {away} "
         f"which ended {score}. Key events: {events_str}. "
         "Provide a concise, engaging summary."
     )
+
 
 def lambda_handler(event, context):
     # Optionally process a single fixture_id
